@@ -1,0 +1,30 @@
+{
+  "peerDependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
+    "hardhat": "^2.22.5",
+    "hardhat-blueprints": "^1.0.6",
+    "hardhat-enquirer-plus": "^1.0.7"
+  },
+  "name": "hardhat-openzeppelin-common-blueprints",
+  "description": "A hardhat plugin installing some blueprints for some OpenZeppelin-powered contracts.",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Tests are not implemented for this package\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlephVault/hardhat-openzeppelin-common-blueprints.git"
+  },
+  "keywords": [
+    "hardhat",
+    "blueprints",
+    "openzeppelin"
+  ],
+  "author": "Luis Masuelli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AlephVault/hardhat-openzeppelin-common-blueprints/issues"
+  },
+  "homepage": "https://github.com/AlephVault/hardhat-openzeppelin-common-blueprints#readme"
+}
