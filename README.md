@@ -5,13 +5,16 @@ A hardhat plugin installing some blueprints for some OpenZeppelin-powered contra
 Run this command to install it from NPM:
 
 ```shell
-npm install hardhat-openzeppelin-common-blueprints@^1.0.0
+npm install --save-dev hardhat-common-tools@^1.0.0 hardhat-enquirer-plus@^1.0.7 hardhat-blueprints@^1.0.6 @openzeppelin/contracts@^5.0.2 hardhat-openzeppelin-common-blueprints@1.0.0
 ```
 
 # Usage
 This is a hardhat plugin, so the first thing to do is to install it in your hardhat.config.ts file:
 
 ```javascript
+require("hardhat-common-tools");
+require("hardhat-enquirer-plus");
+require("hardhat-blueprints");
 require("hardhat-openzeppelin-common-blueprints");
 ```
 
