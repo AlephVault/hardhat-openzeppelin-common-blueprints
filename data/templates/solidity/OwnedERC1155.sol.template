@@ -89,8 +89,8 @@ contract #SCRIPT_NAME# is ERC1155, Ownable {
 
         // Feel free to add more things to the "properties" sub-dictionary.
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(abi.encodePacked(
-            '{"name":"', name, '","description":"', description, '","image":"', image,
-            '","properties":{}}'
+            '{"name": "', name, '", "description": "', description, '", "image": "', image,
+            '", "properties": {}}'
         ))));
     }
 }
