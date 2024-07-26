@@ -227,6 +227,51 @@ extendEnvironment((hre) => {
             argumentType: "bytes"
         }], {}
     ).asTask("erc1155:owned:mint-batch", "Invokes mintBatch(address,uint256[],uint256[],bytes) on an Owned ERC-1155 contract");
+    new hre.methodPrompts.ContractMethodPrompt(
+        "call", "owner", {
+            onError: (e) => {
+                console.error("There was an error while running this method");
+                console.error(e);
+            },
+            onSuccess: async (value) => {
+                console.log("Owner:", value);
+                const signers = await hre.common.getSigners();
+                for(let index = 0; index < signers.length; index++) {
+                    let address = hre.common.getAddress(signers[index]);
+                    if (address.toLowerCase() === value.toLowerCase()) {
+                        console.log("This address belongs to the account with index:", index);
+                    }
+                }
+            }
+        }, [], {}
+    ).asTask("owned:owner", "Invokes owner() on an Ownable contract");
+    new hre.methodPrompts.ContractMethodPrompt(
+        "send", "transferOwnership", {
+            onError: (e) => {
+                console.error("There was an error while running this method");
+                console.error(e);
+            },
+            onSuccess: (tx) => {
+                console.log("Ownership transferred successfully:", tx);
+            }
+        }, [{
+            name: "to",
+            description: "The address to transfer ownership to",
+            message: "Who do you want to transfer ownership to?",
+            argumentType: "smart-address"
+        }], {}
+    ).asTask("owned:transfer-ownership", "Invokes transferOwnership(address) on an Ownable contract");
+    new hre.methodPrompts.ContractMethodPrompt(
+        "send", "renounceOwnership", {
+            onError: (e) => {
+                console.error("There was an error while running this method");
+                console.error(e);
+            },
+            onSuccess: (tx) => {
+                console.log("Ownership renounced successfully:", tx);
+            }
+        }, [], {}
+    ).asTask("owned:renounce-ownership", "Invokes renounceOwnership() on an Ownable contract");
 });
 
 module.exports = {}
