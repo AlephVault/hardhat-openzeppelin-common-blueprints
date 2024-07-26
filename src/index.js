@@ -244,7 +244,7 @@ extendEnvironment((hre) => {
                 }
             }
         }, [], {}
-    ).asTask("owned:owner", "Invokes owner() on an Ownable contract");
+    ).asTask("ownable:owner", "Invokes owner() on an Ownable contract");
     new hre.methodPrompts.ContractMethodPrompt(
         "send", "transferOwnership", {
             onError: (e) => {
@@ -260,7 +260,7 @@ extendEnvironment((hre) => {
             message: "Who do you want to transfer ownership to?",
             argumentType: "smart-address"
         }], {}
-    ).asTask("owned:transfer-ownership", "Invokes transferOwnership(address) on an Ownable contract");
+    ).asTask("ownable:transfer-ownership", "Invokes transferOwnership(address) on an Ownable contract");
     new hre.methodPrompts.ContractMethodPrompt(
         "send", "renounceOwnership", {
             onError: (e) => {
@@ -271,7 +271,7 @@ extendEnvironment((hre) => {
                 console.log("Ownership renounced successfully:", tx);
             }
         }, [], {}
-    ).asTask("owned:renounce-ownership", "Invokes renounceOwnership() on an Ownable contract");
+    ).asTask("ownable:renounce-ownership", "Invokes renounceOwnership() on an Ownable contract");
 });
 
 module.exports = {}
