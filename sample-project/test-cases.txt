@@ -22,9 +22,9 @@ await hre.common.send(contracts.erc1155, "mint", [addresses[1], BigInt("1"), "10
 
 // Commands that were already tested:
 // Owned:
-npx hardhat invoke owned:owner --deployed-contract-id "MyOwnedERC1155Module#MyOwnedERC1155" --network localhost
-npx hardhat invoke owned:transfer-ownership --to 1 --deployed-contract-id "MyOwnedERC1155Module#MyOwnedERC1155" --network localhost
-npx hardhat invoke owned:renounce-ownership --deployed-contract-id "MyOwnedERC1155Module#MyOwnedERC1155" --network localhost --account 1
+npx hardhat invoke ownable:owner --deployed-contract-id "MyOwnedERC1155Module#MyOwnedERC1155" --network localhost
+npx hardhat invoke ownable:transfer-ownership --to 1 --deployed-contract-id "MyOwnedERC1155Module#MyOwnedERC1155" --network localhost
+npx hardhat invoke ownable:renounce-ownership --deployed-contract-id "MyOwnedERC1155Module#MyOwnedERC1155" --network localhost --account 1
 // ERC-20:
 npx hardhat invoke erc20:owned:mint --to 0 --amount "123000000000000000000" --network localhost --deployed-contract-id "MyOwnedERC20Module#MyOwnedERC20" --account 0
 // ERC-721:
