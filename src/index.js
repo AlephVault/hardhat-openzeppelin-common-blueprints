@@ -90,6 +90,143 @@ extendEnvironment((hre) => {
             solidityVersionArgument
         ]
     );
+
+    new hre.methodPrompts.ContractMethodPrompt(
+        "send", "mint", {
+            onError: (e) => {
+                console.error("There was an error while running this method");
+                console.error(e);
+            },
+            onSuccess: (tx) => {
+                console.log("Tokens minted successfully:", tx);
+            }
+        }, [{
+            name: "to",
+            description: "The address to mint tokens to",
+            message: "Who do you want to mint tokens to?",
+            argumentType: "smart-address"
+        }, {
+            name: "amount",
+            description: "The amount to mint",
+            message: "What's the amount to mint?",
+            argumentType: "uint256"
+        }], {}
+    ).asTask("erc20:owned:mint", "Invokes mint(address,uint256) on an Owned ERC-20 contract");
+    new hre.methodPrompts.ContractMethodPrompt(
+        "send", "safeMint(address,uint256)", {
+            onError: (e) => {
+                console.error("There was an error while running this method");
+                console.error(e);
+            },
+            onSuccess: (tx) => {
+                console.log("Tokens minted successfully:", tx);
+            }
+        }, [{
+            name: "to",
+            description: "The address to mint a token to",
+            message: "Who do you want to mint a token to?",
+            argumentType: "smart-address"
+        }, {
+            name: "tokenId",
+            description: "The ID of the token to mint",
+            message: "What's the ID of the token to mint?",
+            argumentType: "uint256"
+        }], {}
+    ).asTask("erc721:owned:mint", "Invokes safeMint(address,uint256) on an Owned ERC-721 contract");
+    new hre.methodPrompts.ContractMethodPrompt(
+        "send", "safeMint(address,uint256,bytes)", {
+            onError: (e) => {
+                console.error("There was an error while running this method");
+                console.error(e);
+            },
+            onSuccess: (tx) => {
+                console.log("Tokens minted successfully:", tx);
+            }
+        }, [{
+            name: "to",
+            description: "The address to mint a token to",
+            message: "Who do you want to mint a token to?",
+            argumentType: "smart-address"
+        }, {
+            name: "tokenId",
+            description: "The ID of the token to mint",
+            message: "What's the ID of the token to mint?",
+            argumentType: "uint256"
+        }, {
+            name: "data",
+            description: "The data of the mint",
+            message: "Enter the data for this mint",
+            argumentType: "bytes"
+        }], {}
+    ).asTask("erc721:owned:mint-with-data", "Invokes safeMint(address,uint256,bytes) on an Owned ERC-721 contract");
+    new hre.methodPrompts.ContractMethodPrompt(
+        "send", "mint", {
+            onError: (e) => {
+                console.error("There was an error while running this method");
+                console.error(e);
+            },
+            onSuccess: (tx) => {
+                console.log("Tokens minted successfully:", tx);
+            }
+        }, [{
+            name: "to",
+            description: "The address to mint tokens to",
+            message: "Who do you want to mint tokens to?",
+            argumentType: "smart-address"
+        }, {
+            name: "tokenId",
+            description: "The ID of the token to mint",
+            message: "What's the ID of the token to mint?",
+            argumentType: "uint256"
+        }, {
+            name: "amount",
+            description: "The amount of the token to mint",
+            message: "What's the amount of the token to mint?",
+            argumentType: "uint256"
+        }, {
+            name: "data",
+            description: "The data of the mint",
+            message: "Enter the data for this mint",
+            argumentType: "bytes"
+        }], {}
+    ).asTask("erc1155:owned:mint", "Invokes mint(address,uint256,uint256,bytes) on an Owned ERC-1155 contract");
+    new hre.methodPrompts.ContractMethodPrompt(
+        "send", "mintBatch", {
+            onError: (e) => {
+                console.error("There was an error while running this method");
+                console.error(e);
+            },
+            onSuccess: (tx) => {
+                console.log("Tokens minted successfully:", tx);
+            }
+        }, [{
+            name: "to",
+            description: "The address to mint tokens to",
+            message: "Who do you want to mint tokens to?",
+            argumentType: "smart-address"
+        }, hre.blueprints.arrayArgument({
+            message: "Tell the IDs of the tokens to mint",
+            description: "The IDs of the tokens to mint",
+            name: "tokenIds",
+            elements: {
+                argumentType: "uint256",
+                message: "Token ID #${index}"
+            }
+        }), hre.blueprints.arrayArgument({
+            message: "Tell the amounts of the tokens to mint",
+            description: "The amounts of the tokens to mint",
+            name: "amounts",
+            elements: {
+                argumentType: "uint256",
+                message: "Token amount #${index}"
+            }
+        }), {
+            name: "data",
+            description: "The data of the mint",
+            message: "Enter the data for this mint",
+            argumentType: "bytes"
+        }], {}
+    ).asTask("erc1155:owned:mint-batch", "Invokes mintBatch(address,uint256[],uint256[],bytes) on an Owned ERC-1155 contract");
 });
 
 module.exports = {}

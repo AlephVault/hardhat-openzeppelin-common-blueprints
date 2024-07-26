@@ -3,7 +3,8 @@
     "@openzeppelin/contracts": "^5.0.2",
     "hardhat": "^2.22.5",
     "hardhat-blueprints": "^1.2.0",
-    "hardhat-enquirer-plus": "^1.4.0"
+    "hardhat-enquirer-plus": "^1.4.0",
+    "hardhat-method-prompts": "^1.2.0"
   },
   "name": "hardhat-openzeppelin-common-blueprints",
   "description": "A hardhat plugin installing some blueprints for some OpenZeppelin-powered contracts.",
