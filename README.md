@@ -5,7 +5,7 @@ A hardhat plugin installing some blueprints for some OpenZeppelin-powered contra
 Run this command to install it from NPM:
 
 ```shell
-npm install --save-dev hardhat-common-tools@^1.4.0 hardhat-enquirer-plus@^1.4.0 hardhat-blueprints@^1.2.0 @openzeppelin/contracts@^5.0.2 hardhat-openzeppelin-common-blueprints@^1.1.1
+npm install --save-dev hardhat-common-tools@^1.5.1 hardhat-enquirer-plus@^1.4.0 hardhat-blueprints@^1.2.0 @openzeppelin/contracts@^5.0.2 hardhat-openzeppelin-common-blueprints@^1.1.1
 ```
 
 # Usage
@@ -26,3 +26,4 @@ npx hardhat blueprint list
 
 You should see many erc-20, erc-721 and erc-1155-related blueprints. Try them and check the code.
 Provided you properly learned about OpenZeppelin's Ownable, ERC20, ERC721 and ERC1155 you'll be fine.
+
