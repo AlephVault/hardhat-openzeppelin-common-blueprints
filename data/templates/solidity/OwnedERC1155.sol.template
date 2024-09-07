@@ -82,7 +82,7 @@ contract #SCRIPT_NAME# is ERC1155, Ownable {
 
     /**
      * Retrieves a JSON with the metadata of the token.
-     * See https://eips.ethereum.org/EIPS/eip-721 for more details.
+     * See https://eips.ethereum.org/EIPS/eip-1155 for more details.
      */
     function uri(uint256 id) public view override returns (string memory) {
         (string memory name, string memory description, string memory image) = _getTokenMetadata(id);

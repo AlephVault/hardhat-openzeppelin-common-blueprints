@@ -5,8 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 
 /**
- * This is a non-fungible token contract which is related
- * to an owner.
+ * This is a non-fungible token contract.
  *
  * Feel free to edit these notes accordingly, but after
  * reading these notes first:
