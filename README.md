@@ -15,6 +15,7 @@ This is a hardhat plugin, so the first thing to do is to install it in your hard
 require("hardhat-common-tools");
 require("hardhat-enquirer-plus");
 require("hardhat-blueprints");
+require("hardhat-method-prompts");
 require("hardhat-openzeppelin-common-blueprints");
 ```
 
