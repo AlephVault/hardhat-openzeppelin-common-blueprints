@@ -1,11 +1,36 @@
-require("@nomicfoundation/hardhat-toolbox");
-require("hardhat-common-tools");
-require("hardhat-enquirer-plus");
-require("hardhat-blueprints");
-require("hardhat-method-prompts");
-require("..");
+import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
+import hardhatOpenZeppelinCommonBlueprints from "hardhat-openzeppelin-common-blueprints";
+import {defineConfig} from "hardhat/config";
 
-/** @type import('hardhat/config').HardhatUserConfig */
-module.exports = {
-  solidity: "0.8.24",
-};
+export default defineConfig({
+  plugins: [
+    hardhatToolboxMochaEthers,
+    hardhatOpenZeppelinCommonBlueprints,
+  ],
+  solidity: {
+    profiles: {
+      default: {
+        version: "0.8.24",
+        settings: {
+          evmVersion: "cancun",
+        },
+      },
+      production: {
+        version: "0.8.24",
+        settings: {
+          evmVersion: "cancun",
+        },
+      },
+    },
+  },
+  networks: {
+    default: {
+      type: "edr-simulated",
+      hardfork: "cancun",
+    },
+    node: {
+      type: "edr-simulated",
+      hardfork: "cancun",
+    },
+  },
+});

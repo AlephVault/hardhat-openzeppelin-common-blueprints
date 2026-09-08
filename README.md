@@ -5,18 +5,48 @@ A hardhat plugin installing some blueprints for some OpenZeppelin-powered contra
 Run this command to install it from NPM:
 
 ```shell
-npm install --save-dev hardhat-common-tools@^1.5.1 hardhat-enquirer-plus@^1.4.0 hardhat-blueprints@^1.2.0 @openzeppelin/contracts@^5.0.2 hardhat-method-prompts@^1.2.0 hardhat-openzeppelin-common-blueprints@^1.2.0
+npm install --save-dev hardhat@^3.0.0 hardhat-common-tools@^3.0.0 hardhat-enquirer-plus@^3.0.0 hardhat-blueprints@^3.0.0 hardhat-method-prompts@^3.0.0 hardhat-openzeppelin-common-blueprints@^3.0.0
+npm install @openzeppelin/contracts@^5.0.2
 ```
 
 # Usage
-This is a hardhat plugin, so the first thing to do is to install it in your hardhat.config.ts file:
+This is a Hardhat 3 plugin. Import it in your Hardhat config and add it to the `plugins` array:
 
 ```javascript
-require("hardhat-common-tools");
-require("hardhat-enquirer-plus");
-require("hardhat-blueprints");
-require("hardhat-method-prompts");
-require("hardhat-openzeppelin-common-blueprints");
+import hardhatOpenZeppelinCommonBlueprints from "hardhat-openzeppelin-common-blueprints";
+import {defineConfig} from "hardhat/config";
+
+export default defineConfig({
+  plugins: [
+    hardhatOpenZeppelinCommonBlueprints,
+  ],
+  solidity: {
+    profiles: {
+      default: {
+        version: "0.8.24",
+        settings: {
+          evmVersion: "cancun",
+        },
+      },
+      production: {
+        version: "0.8.24",
+        settings: {
+          evmVersion: "cancun",
+        },
+      },
+    },
+  },
+  networks: {
+    default: {
+      type: "edr-simulated",
+      hardfork: "cancun",
+    },
+    node: {
+      type: "edr-simulated",
+      hardfork: "cancun",
+    },
+  },
+});
 ```
 
 And that's it! Check the following command to make sure you have the new contract blueprints:
@@ -30,19 +60,19 @@ Provided you properly learned about OpenZeppelin's Ownable, ERC20, ERC721 and ER
 
 ### New invokable methods
 
-The following method tasks are Check them with `--help` to have a grasp on what they do:
+Check these method tasks with `--help` to have a grasp on what they do:
 
 ```shell
 # Owned:
-npx hardhat invoke ownable:owner --help
-npx hardhat invoke ownable:transfer-ownership --help
-npx hardhat invoke ownable:renounce-ownership --help
+npx hardhat invoke ownable owner --help
+npx hardhat invoke ownable transfer-ownership --help
+npx hardhat invoke ownable renounce-ownership --help
 # ERC-20:
-npx hardhat invoke erc20:owned:mint --help
+npx hardhat invoke erc20 owned mint --help
 # ERC-721:
-npx hardhat invoke erc721:owned:mint --help
-npx hardhat invoke erc721:owned:mint-with-data --help
+npx hardhat invoke erc721 owned mint --help
+npx hardhat invoke erc721 owned mint-with-data --help
 # ERC-1155:
-npx hardhat invoke erc1155:owned:mint --help
-npx hardhat invoke erc1155:owned:mint-batch --help
+npx hardhat invoke erc1155 owned mint --help
+npx hardhat invoke erc1155 owned mint-batch --help
 ```

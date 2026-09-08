@@ -1,6 +1,6 @@
-const { buildModule } = require("@nomicfoundation/hardhat-ignition/modules");
+import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-module.exports = buildModule("MyOwnedERC20Module", (m) => {
+export default buildModule("MyOwnedERC20Module", (m) => {
   // You can pass parameters (e.g. "foo") to this module and attend
   // or capture them by using line like this one:
   //

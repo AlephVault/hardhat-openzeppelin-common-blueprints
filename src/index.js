@@ -1,11 +1,307 @@
-const path = require("path");
-const {extendEnvironment} = require("hardhat/config");
+import {emptyTask, task} from "hardhat/config";
+import {definePlugin} from "hardhat/plugins";
+import {ArgumentType} from "hardhat/types/arguments";
+import hardhatBlueprintsPlugin from "hardhat-blueprints";
+import hardhatCommonToolsPlugin from "hardhat-common-tools";
+import hardhatEnquirerPlusPlugin from "hardhat-enquirer-plus";
+import hardhatMethodPromptsPlugin from "hardhat-method-prompts";
+import path from "path";
+import {fileURLToPath} from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const baseDir = path.resolve(
     __dirname, "..", "data", "templates", "solidity"
 );
 
-extendEnvironment((hre) => {
+const txOptionArgumentSpecs = {
+    account: "The account index or address to use as sender",
+    value: "The native token value to send",
+    gas: "The gas limit to use",
+    gasPrice: "The legacy gas price to use",
+    maxFeePerGas: "The max fee per gas to use",
+    maxPriorityFeePerGas: "The max priority fee per gas to use",
+};
+
+function buildContractMethodPromptTask({
+    taskPath, description, methodType, method, handlers, argumentsFactory, txOptionsSpec,
+}) {
+    const argumentSpecs = argumentsFactory();
+    let taskBuilder = task(taskPath, description);
+
+    for (const {name, description: argumentDescription} of argumentSpecs) {
+        taskBuilder = taskBuilder.addOption({
+            name,
+            description: argumentDescription,
+            type: ArgumentType.STRING_WITHOUT_DEFAULT,
+            defaultValue: undefined,
+        });
+    }
+
+    const txOptionKeys = Object.keys(methodType === "call" ? (txOptionsSpec || {}) : txOptionArgumentSpecs);
+    for (const optionKey of txOptionKeys) {
+        taskBuilder = taskBuilder.addOption({
+            name: optionKey,
+            description: txOptionArgumentSpecs[optionKey],
+            type: ArgumentType.STRING_WITHOUT_DEFAULT,
+            defaultValue: undefined,
+        });
+    }
+
+    taskBuilder = taskBuilder
+        .addOption({
+            name: "deploymentId",
+            description: "An optional ignition deployment id",
+            type: ArgumentType.STRING_WITHOUT_DEFAULT,
+            defaultValue: undefined,
+        })
+        .addOption({
+            name: "deployedContractId",
+            description: "An optional ignition deployed contract id",
+            type: ArgumentType.STRING_WITHOUT_DEFAULT,
+            defaultValue: undefined,
+        })
+        .addFlag({
+            name: "eipReplayProtection",
+            description: "Whether to use an eip155 signature for the transaction",
+        })
+        .addFlag({
+            name: "nonInteractive",
+            description: "Whether to throw an error because the task became interactive",
+        })
+        .addOption({
+            name: "methodPromptTask",
+            description: `Internal option for ${description}`,
+            type: ArgumentType.STRING,
+            defaultValue: taskPath.slice(1).join(":"),
+            hidden: true,
+        });
+
+    return taskBuilder.setAction(() => import("./task-action.js")).build();
+}
+
+const promptHandlers = {
+    mint: {
+        onError: (e) => {
+            console.error("There was an error while running this method");
+            console.error(e);
+        },
+        onSuccess: (tx) => {
+            console.log("Tokens minted successfully:", tx);
+        },
+    },
+    owner: (hre) => ({
+        onError: (e) => {
+            console.error("There was an error while running this method");
+            console.error(e);
+        },
+        onSuccess: async (value) => {
+            console.log("Owner:", value);
+            const signers = await hre.common.getSigners();
+            for (let index = 0; index < signers.length; index++) {
+                const address = hre.common.getAddress(signers[index]);
+                if (address.toLowerCase() === value.toLowerCase()) {
+                    console.log("This address belongs to the account with index:", index);
+                }
+            }
+        },
+    }),
+    transferOwnership: {
+        onError: (e) => {
+            console.error("There was an error while running this method");
+            console.error(e);
+        },
+        onSuccess: (tx) => {
+            console.log("Ownership transferred successfully:", tx);
+        },
+    },
+    renounceOwnership: {
+        onError: (e) => {
+            console.error("There was an error while running this method");
+            console.error(e);
+        },
+        onSuccess: (tx) => {
+            console.log("Ownership renounced successfully:", tx);
+        },
+    },
+};
+
+const smartAddressArgument = {
+    name: "to",
+    description: "The address to mint tokens to",
+    message: "Who do you want to mint tokens to?",
+    argumentType: "smart-address",
+};
+
+const ownedMethodPromptTasks = [
+    emptyTask(["invoke", "ownable"], "Prompted Ownable method calls").build(),
+    emptyTask(["invoke", "erc20", "owned"], "Prompted owned ERC-20 method calls").build(),
+    emptyTask(["invoke", "erc721", "owned"], "Prompted owned ERC-721 method calls").build(),
+    emptyTask(["invoke", "erc1155", "owned"], "Prompted owned ERC-1155 method calls").build(),
+    buildContractMethodPromptTask({
+        taskPath: ["invoke", "erc20", "owned", "mint"],
+        description: "Invokes mint(address,uint256) on an Owned ERC-20 contract",
+        methodType: "send",
+        method: "mint",
+        handlers: promptHandlers.mint,
+        argumentsFactory: () => [
+            smartAddressArgument,
+            {
+                name: "amount",
+                description: "The amount to mint",
+                message: "What's the amount to mint?",
+                argumentType: "uint256",
+            },
+        ],
+    }),
+    buildContractMethodPromptTask({
+        taskPath: ["invoke", "erc721", "owned", "mint"],
+        description: "Invokes safeMint(address,uint256) on an Owned ERC-721 contract",
+        methodType: "send",
+        method: "safeMint(address,uint256)",
+        handlers: promptHandlers.mint,
+        argumentsFactory: () => [
+            {
+                ...smartAddressArgument,
+                description: "The address to mint a token to",
+                message: "Who do you want to mint a token to?",
+            },
+            {
+                name: "tokenId",
+                description: "The ID of the token to mint",
+                message: "What's the ID of the token to mint?",
+                argumentType: "uint256",
+            },
+        ],
+    }),
+    buildContractMethodPromptTask({
+        taskPath: ["invoke", "erc721", "owned", "mint-with-data"],
+        description: "Invokes safeMint(address,uint256,bytes) on an Owned ERC-721 contract",
+        methodType: "send",
+        method: "safeMint(address,uint256,bytes)",
+        handlers: promptHandlers.mint,
+        argumentsFactory: () => [
+            {
+                ...smartAddressArgument,
+                description: "The address to mint a token to",
+                message: "Who do you want to mint a token to?",
+            },
+            {
+                name: "tokenId",
+                description: "The ID of the token to mint",
+                message: "What's the ID of the token to mint?",
+                argumentType: "uint256",
+            },
+            {
+                name: "data",
+                description: "The data of the mint",
+                message: "Enter the data for this mint",
+                argumentType: "bytes",
+            },
+        ],
+    }),
+    buildContractMethodPromptTask({
+        taskPath: ["invoke", "erc1155", "owned", "mint"],
+        description: "Invokes mint(address,uint256,uint256,bytes) on an Owned ERC-1155 contract",
+        methodType: "send",
+        method: "mint",
+        handlers: promptHandlers.mint,
+        argumentsFactory: () => [
+            smartAddressArgument,
+            {
+                name: "tokenId",
+                description: "The ID of the token to mint",
+                message: "What's the ID of the token to mint?",
+                argumentType: "uint256",
+            },
+            {
+                name: "amount",
+                description: "The amount of the token to mint",
+                message: "What's the amount of the token to mint?",
+                argumentType: "uint256",
+            },
+            {
+                name: "data",
+                description: "The data of the mint",
+                message: "Enter the data for this mint",
+                argumentType: "bytes",
+            },
+        ],
+    }),
+    buildContractMethodPromptTask({
+        taskPath: ["invoke", "erc1155", "owned", "mint-batch"],
+        description: "Invokes mintBatch(address,uint256[],uint256[],bytes) on an Owned ERC-1155 contract",
+        methodType: "send",
+        method: "mintBatch",
+        handlers: promptHandlers.mint,
+        argumentsFactory: (hre) => [
+            smartAddressArgument,
+            hre?.blueprints.arrayArgument({
+                message: "Tell the IDs of the tokens to mint",
+                description: "The IDs of the tokens to mint",
+                name: "tokenIds",
+                elements: {
+                    argumentType: "uint256",
+                    message: "Token ID #${index}",
+                },
+            }) || {
+                name: "tokenIds",
+                description: "The IDs of the tokens to mint",
+            },
+            hre?.blueprints.arrayArgument({
+                message: "Tell the amounts of the tokens to mint",
+                description: "The amounts of the tokens to mint",
+                name: "amounts",
+                elements: {
+                    argumentType: "uint256",
+                    message: "Token amount #${index}",
+                },
+            }) || {
+                name: "amounts",
+                description: "The amounts of the tokens to mint",
+            },
+            {
+                name: "data",
+                description: "The data of the mint",
+                message: "Enter the data for this mint",
+                argumentType: "bytes",
+            },
+        ],
+    }),
+    buildContractMethodPromptTask({
+        taskPath: ["invoke", "ownable", "owner"],
+        description: "Invokes owner() on an Ownable contract",
+        methodType: "call",
+        method: "owner",
+        handlers: promptHandlers.owner,
+        argumentsFactory: () => [],
+    }),
+    buildContractMethodPromptTask({
+        taskPath: ["invoke", "ownable", "transfer-ownership"],
+        description: "Invokes transferOwnership(address) on an Ownable contract",
+        methodType: "send",
+        method: "transferOwnership",
+        handlers: promptHandlers.transferOwnership,
+        argumentsFactory: () => [
+            {
+                name: "to",
+                description: "The address to transfer ownership to",
+                message: "Who do you want to transfer ownership to?",
+                argumentType: "smart-address",
+            },
+        ],
+    }),
+    buildContractMethodPromptTask({
+        taskPath: ["invoke", "ownable", "renounce-ownership"],
+        description: "Invokes renounceOwnership() on an Ownable contract",
+        methodType: "send",
+        method: "renounceOwnership",
+        handlers: promptHandlers.renounceOwnership,
+        argumentsFactory: () => [],
+    }),
+];
+
+function installOpenZeppelinCommonBlueprints(hre) {
     hre.blueprints.registerBlueprintArgumentType(
         "token-symbol", {
             type: "plus:given-or-valid-input",
@@ -91,187 +387,28 @@ extendEnvironment((hre) => {
         ]
     );
 
-    new hre.methodPrompts.ContractMethodPrompt(
-        "send", "mint", {
-            onError: (e) => {
-                console.error("There was an error while running this method");
-                console.error(e);
-            },
-            onSuccess: (tx) => {
-                console.log("Tokens minted successfully:", tx);
-            }
-        }, [{
-            name: "to",
-            description: "The address to mint tokens to",
-            message: "Who do you want to mint tokens to?",
-            argumentType: "smart-address"
-        }, {
-            name: "amount",
-            description: "The amount to mint",
-            message: "What's the amount to mint?",
-            argumentType: "uint256"
-        }], {}
-    ).asTask("erc20:owned:mint", "Invokes mint(address,uint256) on an Owned ERC-20 contract");
-    new hre.methodPrompts.ContractMethodPrompt(
-        "send", "safeMint(address,uint256)", {
-            onError: (e) => {
-                console.error("There was an error while running this method");
-                console.error(e);
-            },
-            onSuccess: (tx) => {
-                console.log("Tokens minted successfully:", tx);
-            }
-        }, [{
-            name: "to",
-            description: "The address to mint a token to",
-            message: "Who do you want to mint a token to?",
-            argumentType: "smart-address"
-        }, {
-            name: "tokenId",
-            description: "The ID of the token to mint",
-            message: "What's the ID of the token to mint?",
-            argumentType: "uint256"
-        }], {}
-    ).asTask("erc721:owned:mint", "Invokes safeMint(address,uint256) on an Owned ERC-721 contract");
-    new hre.methodPrompts.ContractMethodPrompt(
-        "send", "safeMint(address,uint256,bytes)", {
-            onError: (e) => {
-                console.error("There was an error while running this method");
-                console.error(e);
-            },
-            onSuccess: (tx) => {
-                console.log("Tokens minted successfully:", tx);
-            }
-        }, [{
-            name: "to",
-            description: "The address to mint a token to",
-            message: "Who do you want to mint a token to?",
-            argumentType: "smart-address"
-        }, {
-            name: "tokenId",
-            description: "The ID of the token to mint",
-            message: "What's the ID of the token to mint?",
-            argumentType: "uint256"
-        }, {
-            name: "data",
-            description: "The data of the mint",
-            message: "Enter the data for this mint",
-            argumentType: "bytes"
-        }], {}
-    ).asTask("erc721:owned:mint-with-data", "Invokes safeMint(address,uint256,bytes) on an Owned ERC-721 contract");
-    new hre.methodPrompts.ContractMethodPrompt(
-        "send", "mint", {
-            onError: (e) => {
-                console.error("There was an error while running this method");
-                console.error(e);
-            },
-            onSuccess: (tx) => {
-                console.log("Tokens minted successfully:", tx);
-            }
-        }, [{
-            name: "to",
-            description: "The address to mint tokens to",
-            message: "Who do you want to mint tokens to?",
-            argumentType: "smart-address"
-        }, {
-            name: "tokenId",
-            description: "The ID of the token to mint",
-            message: "What's the ID of the token to mint?",
-            argumentType: "uint256"
-        }, {
-            name: "amount",
-            description: "The amount of the token to mint",
-            message: "What's the amount of the token to mint?",
-            argumentType: "uint256"
-        }, {
-            name: "data",
-            description: "The data of the mint",
-            message: "Enter the data for this mint",
-            argumentType: "bytes"
-        }], {}
-    ).asTask("erc1155:owned:mint", "Invokes mint(address,uint256,uint256,bytes) on an Owned ERC-1155 contract");
-    new hre.methodPrompts.ContractMethodPrompt(
-        "send", "mintBatch", {
-            onError: (e) => {
-                console.error("There was an error while running this method");
-                console.error(e);
-            },
-            onSuccess: (tx) => {
-                console.log("Tokens minted successfully:", tx);
-            }
-        }, [{
-            name: "to",
-            description: "The address to mint tokens to",
-            message: "Who do you want to mint tokens to?",
-            argumentType: "smart-address"
-        }, hre.blueprints.arrayArgument({
-            message: "Tell the IDs of the tokens to mint",
-            description: "The IDs of the tokens to mint",
-            name: "tokenIds",
-            elements: {
-                argumentType: "uint256",
-                message: "Token ID #${index}"
-            }
-        }), hre.blueprints.arrayArgument({
-            message: "Tell the amounts of the tokens to mint",
-            description: "The amounts of the tokens to mint",
-            name: "amounts",
-            elements: {
-                argumentType: "uint256",
-                message: "Token amount #${index}"
-            }
-        }), {
-            name: "data",
-            description: "The data of the mint",
-            message: "Enter the data for this mint",
-            argumentType: "bytes"
-        }], {}
-    ).asTask("erc1155:owned:mint-batch", "Invokes mintBatch(address,uint256[],uint256[],bytes) on an Owned ERC-1155 contract");
-    new hre.methodPrompts.ContractMethodPrompt(
-        "call", "owner", {
-            onError: (e) => {
-                console.error("There was an error while running this method");
-                console.error(e);
-            },
-            onSuccess: async (value) => {
-                console.log("Owner:", value);
-                const signers = await hre.common.getSigners();
-                for(let index = 0; index < signers.length; index++) {
-                    let address = hre.common.getAddress(signers[index]);
-                    if (address.toLowerCase() === value.toLowerCase()) {
-                        console.log("This address belongs to the account with index:", index);
-                    }
-                }
-            }
-        }, [], {}
-    ).asTask("ownable:owner", "Invokes owner() on an Ownable contract");
-    new hre.methodPrompts.ContractMethodPrompt(
-        "send", "transferOwnership", {
-            onError: (e) => {
-                console.error("There was an error while running this method");
-                console.error(e);
-            },
-            onSuccess: (tx) => {
-                console.log("Ownership transferred successfully:", tx);
-            }
-        }, [{
-            name: "to",
-            description: "The address to transfer ownership to",
-            message: "Who do you want to transfer ownership to?",
-            argumentType: "smart-address"
-        }], {}
-    ).asTask("ownable:transfer-ownership", "Invokes transferOwnership(address) on an Ownable contract");
-    new hre.methodPrompts.ContractMethodPrompt(
-        "send", "renounceOwnership", {
-            onError: (e) => {
-                console.error("There was an error while running this method");
-                console.error(e);
-            },
-            onSuccess: (tx) => {
-                console.log("Ownership renounced successfully:", tx);
-            }
-        }, [], {}
-    ).asTask("ownable:renounce-ownership", "Invokes renounceOwnership() on an Ownable contract");
+}
+
+const hardhatOpenZeppelinCommonBlueprintsPlugin = definePlugin({
+    id: "hardhat-openzeppelin-common-blueprints",
+    npmPackage: "hardhat-openzeppelin-common-blueprints",
+    dependencies: () => [
+        Promise.resolve({default: hardhatCommonToolsPlugin}),
+        Promise.resolve({default: hardhatEnquirerPlusPlugin}),
+        Promise.resolve({default: hardhatBlueprintsPlugin}),
+        Promise.resolve({default: hardhatMethodPromptsPlugin}),
+    ],
+    hookHandlers: {
+        hre: async () => ({
+            default: async () => ({
+                created: async (_context, hre) => {
+                    installOpenZeppelinCommonBlueprints(hre);
+                },
+            }),
+        }),
+    },
+    tasks: ownedMethodPromptTasks,
 });
 
-module.exports = {}
+export {installOpenZeppelinCommonBlueprints};
+export default hardhatOpenZeppelinCommonBlueprintsPlugin;
